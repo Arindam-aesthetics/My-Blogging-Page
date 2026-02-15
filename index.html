@@ -413,8 +413,8 @@ function hideToast() {
   if (toastTimer) clearTimeout(toastTimer);
 }
 
-const isConfigured = API_KEY !== "$2a$10$Q1IbkiYit15c6WbMQI7VBuldRdck7HqnElid/y9dwOx8I0PFEoW2G";
-const hasBinId     = BIN_ID  !== "6991996d43b1c97be9807dfb";
+const isConfigured = API_KEY === "YOUR_JSONBIN_API_KEY";
+const hasBinId     = BIN_ID  === "YOUR_BIN_ID";
 
 // ════════════════════════════════════════════════════════════════
 //  JSONBIN API
@@ -422,7 +422,7 @@ const hasBinId     = BIN_ID  !== "6991996d43b1c97be9807dfb";
 
 // Read all posts from the bin
 async function fetchPosts() {
-  if (!isConfigured || !hasBinId) return [];
+  if (isConfigured || hasBinId) return [];
   const res = await fetch(`${JSONBIN_BASE}/b/${activeBinId}/latest`, {
     headers: { "X-Master-Key": API_KEY }
   });
@@ -435,7 +435,7 @@ async function fetchPosts() {
 async function writePosts(newPosts) {
   if (!isConfigured) throw new Error("API key not set");
 
-  if (!hasBinId && activeBinId === "YOUR_BIN_ID") {
+  if (hasBinId) {
     // First time — create a new bin
     const res = await fetch(`${JSONBIN_BASE}/b`, {
       method: "POST",
@@ -739,7 +739,8 @@ function initEvents() {
 async function init() {
   initEvents();
 
-  if (!isConfigured) {
+  if (isConfigured) {
+    // still has placeholder values
     document.getElementById("setup-banner").classList.add("show");
     document.getElementById("loading-screen").style.display = "none";
     renderHome();
@@ -747,7 +748,11 @@ async function init() {
   }
 
   try {
-    posts = await fetchPosts();
+    if (hasBinId) {
+      posts = [];
+    } else {
+      posts = await fetchPosts();
+    }
   } catch(err) {
     console.error("Could not load posts:", err);
     posts = [];
